@@ -1,5 +1,5 @@
-# CogVideo-lamda
-This repo makes it straightforward to run CogVideo on [Lambda](https://lambdalabs.com/), an affordable cloud provider.
+# Running CogVideo on Lambda Labs
+This repo makes it straightforward to run CogVideo on [Lambda](https://lambdalabs.com/), an affordable GPU cloud provider.
 
 This instructions are meant to get you up and running as fast as possible so you can create videos using the minimum amount of GPU time.
 
