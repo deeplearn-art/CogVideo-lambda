@@ -605,6 +605,7 @@ def main(args):
         text_len_1st = len(seq_1st) - frame_len*1 - 1
 
         seq_1st = torch.cuda.LongTensor(seq_1st, device=args.device).unsqueeze(0)
+        print(f"DEBUG: init : {init}")
         if init is None:
             output_list_1st = []
             for tim in range(max(batch_size // mbz, 1)):
@@ -711,6 +712,7 @@ def main(args):
             image = Image.alpha_composite(bg, image).convert("RGB")
             imagefile = f'{tempfile.mkdtemp()}/input.png'
             image.save(imagefile, format="png")
+            print("DEBUG: processed init")
             return imagefile
         except (FileNotFoundError, UnidentifiedImageError):
             logging.debug("Bad image prompt; ignoring")  # Is there a better way to input images?   
@@ -747,7 +749,7 @@ def main(args):
                     return 
                 
             try:
-                initpath = 'home/ubuntu/myfs/CogVideo-lambda/init/1.png' #hard coded for now
+                initpath = '/home/ubuntu/myfs/CogVideo-lambda/init/1.png' #hard coded for now
                 init=None
                 if os.path.exists(initpath):
                     init = process_init(init)
