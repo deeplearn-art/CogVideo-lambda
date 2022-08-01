@@ -14,7 +14,7 @@ TOPK=12
 script_path=$(realpath $0)
 script_dir=$(dirname $script_path)
 
-MASTER_PORT=${MASTER_PORT} SAT_HOME=/sharefs/cogview-new python cogvideo_pipeline.py \
+MASTER_PORT=${MASTER_PORT} SAT_HOME=/myfs/cogview-new python cogvideo_pipeline.py \
         --input-source /home/ubuntu/CogVideo-lambda/one-prompt-per-line.txt \
         --output-path ./output \
         --parallel-size 1 \

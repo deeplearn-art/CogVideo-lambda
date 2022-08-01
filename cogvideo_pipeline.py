@@ -14,11 +14,12 @@ import sys
 import torch
 import argparse
 import time
+import tempfile
 from torchvision.utils import save_image
 import stat
 from icetk import icetk as tokenizer
 import logging, sys
-
+from PIL import Image
 import torch.distributed as dist
 tokenizer.add_special_tokens(['<start_of_image>', '<start_of_english>', '<start_of_chinese>'])
 
@@ -582,7 +583,7 @@ def main(args):
         return True
    
     
-    def process_stage1(model, seq_text, duration, video_raw_text=None, video_guidance_text="视频", image_text_suffix="", outputdir=None, batch_size=1):
+    def process_stage1(model, seq_text, duration, video_raw_text=None, video_guidance_text="视频", image_text_suffix="", outputdir=None, batch_size=1, init=None):
         process_start_time = time.time()
         use_guide = args.use_guidance_stage1
         if args.both_stages:
@@ -604,25 +605,28 @@ def main(args):
         text_len_1st = len(seq_1st) - frame_len*1 - 1
 
         seq_1st = torch.cuda.LongTensor(seq_1st, device=args.device).unsqueeze(0)
-        output_list_1st = []
-        for tim in range(max(batch_size // mbz, 1)):
-            start_time = time.time()
-            output_list_1st.append(
-                my_filling_sequence(model, args,seq_1st.clone(),
-                    batch_size=min(batch_size, mbz),
-                    get_masks_and_position_ids=get_masks_and_position_ids_stage1,
-                    text_len=text_len_1st, 
-                    frame_len=frame_len,
-                    strategy=strategy_cogview2,
-                    strategy2=strategy_cogvideo,
-                    log_text_attention_weights=1.4,
-                    enforce_no_swin=True,
-                    mode_stage1=True,
-                    )[0]
-                )
-            logging.info("[First Frame]Taken time {:.2f}\n".format(time.time() - start_time))
-        output_tokens_1st = torch.cat(output_list_1st, dim=0)
-        given_tokens = output_tokens_1st[:, text_len_1st+1:text_len_1st+401].unsqueeze(1) # given_tokens.shape: [bs, frame_num, 400]
+        if init is None:
+            output_list_1st = []
+            for tim in range(max(batch_size // mbz, 1)):
+                start_time = time.time()
+                output_list_1st.append(
+                    my_filling_sequence(model, args,seq_1st.clone(),
+                        batch_size=min(batch_size, mbz),
+                        get_masks_and_position_ids=get_masks_and_position_ids_stage1,
+                        text_len=text_len_1st, 
+                        frame_len=frame_len,
+                        strategy=strategy_cogview2,
+                        strategy2=strategy_cogvideo,
+                        log_text_attention_weights=1.4,
+                        enforce_no_swin=True,
+                        mode_stage1=True,
+                        )[0]
+                    )
+                logging.info("[First Frame]Taken time {:.2f}\n".format(time.time() - start_time))
+            output_tokens_1st = torch.cat(output_list_1st, dim=0)
+            given_tokens = output_tokens_1st[:, text_len_1st+1:text_len_1st+401].unsqueeze(1) # given_tokens.shape: [bs, frame_num, 400]    
+        else:
+            given_tokens = tokenizer.encode(image_path=init, image_size=160).repeat(batch_size, 1).unsqueeze(1)
 
         # generate subsequent frames:
         total_frames = generate_frame_num
@@ -699,7 +703,18 @@ def main(args):
         return save_tokens
                
     # ======================================================================================================
-    
+    def process_init(img):
+        try:
+            image = Image.open(str(img)).convert("RGBA")
+            # Remove alpha channel if present
+            bg = Image.new("RGBA", image.size, (255, 255, 255))
+            image = Image.alpha_composite(bg, image).convert("RGB")
+            imagefile = f'{tempfile.mkdtemp()}/input.png'
+            image.save(imagefile, format="png")
+            return imagefile
+        except (FileNotFoundError, UnidentifiedImageError):
+            logging.debug("Bad image prompt; ignoring")  # Is there a better way to input images?   
+    # =================================
     if args.stage_1 or args.both_stages:
         if args.input_source != "interactive":
             with open(args.input_source, 'r') as fin:
@@ -732,10 +747,14 @@ def main(args):
                     return 
                 
             try:
+                initpath = 'home/ubuntu/myfs/CogVideo-lambda/init/1.png' #hard coded for now
+                init=None
+                if os.path.exists(initpath):
+                    init = process_init(init)
                 path = os.path.join(args.output_path, f"{now_qi}_{raw_text}")
                 parent_given_tokens = process_stage1(model_stage1, raw_text, duration=4.0, video_raw_text=raw_text, video_guidance_text="视频",
                                                      image_text_suffix=" 高清摄影",
-                                                     outputdir=path if args.stage_1 else None, batch_size=args.batch_size)
+                                                     outputdir=path if args.stage_1 else None, batch_size=args.batch_size, init=init)
                 if args.both_stages:
                     process_stage2(model_stage2, raw_text, duration=2.0, video_raw_text=raw_text+" 视频", 
                             video_guidance_text="视频", parent_given_tokens=parent_given_tokens, 
