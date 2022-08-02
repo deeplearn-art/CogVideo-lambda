@@ -752,7 +752,9 @@ def main(args):
                 init_dir = '/home/ubuntu/myfs/CogVideo-lambda/init' #hard coded for now
                 init_img=None
                 if os.path.exists(init_dir) and os.listdir(init_dir) is not []:
-                    init_img = process_init(os.listdir(init_dir)[0]) 
+                    img_file = os.listdir(init_dir)[0]
+                    img_path = os.path.join(init_dir,img_file)
+                    init_img = process_init(img_path) 
                 path = os.path.join(args.output_path, f"{now_qi}_{raw_text}")
                 parent_given_tokens = process_stage1(model_stage1, raw_text, duration=4.0, video_raw_text=raw_text, video_guidance_text="视频",
                                                      image_text_suffix=" 高清摄影",
