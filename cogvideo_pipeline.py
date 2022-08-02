@@ -752,7 +752,7 @@ def main(args):
                 initpath = '/home/ubuntu/myfs/CogVideo-lambda/init/1.png' #hard coded for now
                 init=None
                 if os.path.exists(initpath):
-                    init = process_init(init)
+                    init = process_init(initpath)
                 path = os.path.join(args.output_path, f"{now_qi}_{raw_text}")
                 parent_given_tokens = process_stage1(model_stage1, raw_text, duration=4.0, video_raw_text=raw_text, video_guidance_text="视频",
                                                      image_text_suffix=" 高清摄影",
