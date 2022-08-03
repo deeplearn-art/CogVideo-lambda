@@ -35,4 +35,6 @@ MASTER_PORT=${MASTER_PORT} SAT_HOME=/sharefs/cogview-new python cogvideo_pipelin
         --num-workers 0 \
         --batch-size 4 \
         --max-inference-batch-size 8 \
+        --init-clip $1
+        --init-frame $2
         $@

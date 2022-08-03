@@ -577,7 +577,7 @@ def main(args):
         for sample_i in range(sample_num):
             my_save_multiple_images(decoded_sr_videos[sample_i], outputdir,subdir=f"frames/{sample_i+sample_num*gpu_rank}", debug=False)
             os.system(f"gifmaker -i '{outputdir}'/frames/'{sample_i+sample_num*gpu_rank}'/0*.jpg -o '{outputdir}/{sample_i+sample_num*gpu_rank}.gif' -d 0.125")
-        
+            #TODO make mp4 with frame numbrs
         logging.info("Direct super-resolution completed. Taken time {:.2f}\n".format(time.time() - dsr_starttime))
 
         return True
@@ -712,7 +712,7 @@ def main(args):
             image = Image.alpha_composite(bg, image).convert("RGB")
             imagefile = f'{tempfile.mkdtemp()}/input.png'
             image.save(imagefile, format="png")
-            print("DEBUG: processed init")
+            print("DEBUG: Processed init")
             return imagefile
         except (FileNotFoundError, UnidentifiedImageError):
             logging.debug("Bad image prompt; ignoring")  # Is there a better way to input images?   
@@ -739,7 +739,8 @@ def main(args):
                 raw_text = promptlist[now_qi]
                 raw_text = raw_text.strip()
                 print(f'Working on Line No. {now_qi} on {rk}... [{raw_text}]')
-            else: # interactive
+            else: # interactive 
+                #TODO put google translat here
                 raw_text = input("\nPlease Input Query (stop to exit) >>> ") 
                 raw_text = raw_text.strip()
                 if not raw_text:
@@ -749,6 +750,7 @@ def main(args):
                     return 
                 
             try:
+                print(f'DEBUG : init clip : {args.init_clip},init frame : {args.init_frame}')
                 init_dir = '/home/ubuntu/myfs/CogVideo-lambda/init' #hard coded for now
                 init_img=None
                 if os.path.exists(init_dir) and os.listdir(init_dir) is not []:
@@ -803,6 +805,8 @@ if __name__ == "__main__":
     py_parser.add_argument('--parallel-size', type=int, default=1)
     py_parser.add_argument('--stage1-max-inference-batch-size', type=int, default=-1) # -1: use max-inference-batch-size
     py_parser.add_argument('--multi-gpu', action='store_true')
+    py_parser.add_argument('--init-clip', type=str, default="")
+    py_parser.add_argument('--init-frame', type=str, default="")
 
     CogVideoCacheModel.add_model_specific_args(py_parser)
 
