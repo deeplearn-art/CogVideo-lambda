@@ -13,4 +13,4 @@ cd Image-Local-Attention;
 python setup.py install --user;
 cd ../;
 
-bash scripts/custom_inference.sh;
+#bash scripts/custom_inference.sh;
