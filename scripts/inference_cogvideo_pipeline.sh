@@ -14,7 +14,7 @@ TOPK=12
 script_path=$(realpath $0)
 script_dir=$(dirname $script_path)
 
-MASTER_PORT=${MASTER_PORT} SAT_HOME=/sharefs/cogview-new python cogvideo_pipeline.py \
+MASTER_PORT=${MASTER_PORT} SAT_HOME=/home/ubuntu/myfs/cogview-new/models python cogvideo_pipeline.py \
         --input-source interactive \
         --output-path ./output \
         --parallel-size 1 \
