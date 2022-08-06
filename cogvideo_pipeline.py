@@ -743,6 +743,8 @@ def main(args):
                 #TODO put google translat here
                 raw_text = input("\nPlease Input Query (stop to exit) >>> ") 
                 raw_text = raw_text.strip()
+                clip_n = input("\nClip number : ").strip()
+                frame_n = input("\nFrame number : ").strip()
                 if not raw_text:
                     print('Query should not be empty!')
                     continue
@@ -750,7 +752,7 @@ def main(args):
                     return 
                 
             try:
-                print(f'DEBUG : init clip : {args.init_clip},init frame : {args.init_frame}')
+                print(f'DEBUG : init clip : {clip_n},init frame : {frame_n}')
                 init_dir = '/home/ubuntu/myfs/CogVideo-lambda/init' #hard coded for now
                 init_img=None
                 if os.path.exists(init_dir) and os.listdir(init_dir) is not []:
