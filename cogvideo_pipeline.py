@@ -579,8 +579,24 @@ def main(args):
 
         for sample_i in range(sample_num):
             my_save_multiple_images(decoded_sr_videos[sample_i], outputdir,subdir=f"frames/{sample_i+sample_num*gpu_rank}", debug=False)
-            os.system(f"gifmaker -i '{outputdir}'/frames/'{sample_i+sample_num*gpu_rank}'/0*.jpg -o '{outputdir}/{sample_i+sample_num*gpu_rank}.gif' -d 0.125")
-            #TODO make mp4 with frame numbrs
+            #os.system(f"gifmaker -i '{outputdir}'/frames/'{sample_i+sample_num*gpu_rank}'/0*.jpg -o '{outputdir}/{sample_i+sample_num*gpu_rank}.gif' -d 0.125")
+          
+            # make preview clips
+            start_number = 0
+            drawtxt = "drawtext=text='%{eif\:n+"+ str(start_number) +"\:d}':x=10:y=10:fontsize=50:box=1"
+            ret = subprocess.call([
+                "ffmpeg",
+                "-start_number",
+                f"{start_number:05}",
+                "-y",
+                "-i", 
+                f"'{outputdir}'/frames/'{sample_i}'/%05d.jpg",
+                "-vf",
+                drawtxt,
+                "-c:a",
+                "copy", 
+                f"{outputdir}/{sample_i}.mp4"
+            ])
         logging.info("Direct super-resolution completed. Taken time {:.2f}\n".format(time.time() - dsr_starttime))
 
         return True
@@ -699,33 +715,16 @@ def main(args):
             for clip_i in range(len(imgs)):
                 # os.makedirs(output_dir_full_paths[clip_i], exist_ok=True)
                 my_save_multiple_images(imgs[clip_i], outputdir, subdir=f"frames/{clip_i}", debug=False)
-                #os.system(f"gifmaker -i '{outputdir}'/frames/'{clip_i}'/0*.jpg -o '{outputdir}/{clip_i}.gif' -d 0.25")
-                # make preview clips
-                start_number = 0
-                drawtxt = "drawtext=text='%{eif\:n+"+ str(start_number) +"\:d}':x=10:y=10:fontsize=50:box=1"
-                ret = subprocess.call([
-                    "ffmpeg",
-                    "-start_number",
-                    f"{start_number:05}",
-                    "-y",
-                    "-i", 
-                    f"'{outputdir}'/frames/'{clip_i}'/%05d.jpg",
-                    "-vf",
-                    drawtxt,
-                    "-c:a",
-                    "copy", 
-                    f"{outputdir}/{clip_i}.mp4"
-                ])
-
+                os.system(f"gifmaker -i '{outputdir}'/frames/'{clip_i}'/0*.jpg -o '{outputdir}/{clip_i}.gif' -d 0.25")
             torch.save(save_tokens, os.path.join(outputdir, 'frame_tokens.pt'))
         
         logging.info("CogVideo Stage1 completed. Taken time {:.2f}\n".format(time.time() - process_start_time))
         
         return save_tokens
     # ======================================================================================================
-    def process_clip(clip_n,frame_n, out_n):
+    def process_clip(outputdir, clip_n,frame_n, out_n):
         print(f'DEBUG: Processing init clip : {clip_n},init frame : {frame_n}')
-        frame_dir = f'output/frames/{frame_n}'
+        frame_dir = f'{outputdir}/frames/{clip_n}'
         # copy the selected frame into init image dir
         shutil.copy(f'{frame_dir}/{frame_n}.jpg','init/')
         # render video
@@ -786,18 +785,19 @@ def main(args):
             else: # interactive 
                 #TODO put google translat here
                 raw_text = input("\nPlease Input Query (stop to exit) >>> ") 
+                
                 raw_text = raw_text.strip()
-                clip_n = input("\nClip number : ").strip()
-                frame_n = input("\nFrame number : ").strip()
+                if raw_text == "stop":
+                    return 
                 if not raw_text:
                     print('Query should not be empty!')
                     continue
-                if raw_text == "stop":
-                    return 
+                clip_n = input("\nClip number : ").strip()
+                frame_n = input("\nFrame number : ").strip()
                 
             try:
                 if len(clip_n) > 0 and len(frame_n) > 0:
-                    if process_clip(clip_n,frame_n, out_n): #succesfully rendered imgs to video, increment video count
+                    if process_clip(outputdir,clip_n,frame_n, out_n): #succesfully rendered imgs to video, increment video count
                         out_n += 1
                 init_dir = '/home/ubuntu/myfs/CogVideo-lambda/init' #hard coded for now
                 init_img=None
