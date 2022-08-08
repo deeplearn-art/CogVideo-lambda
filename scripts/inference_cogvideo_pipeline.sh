@@ -34,5 +34,5 @@ MASTER_PORT=${MASTER_PORT} SAT_HOME=/home/ubuntu/myfs/cogview-new/models python 
         --seed 1234 \
         --num-workers 0 \
         --batch-size 4 \
-        --max-inference-batch-size 8 \
+        --max-inference-batch-size 8 
         $@

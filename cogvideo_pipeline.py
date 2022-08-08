@@ -15,6 +15,9 @@ import torch
 import argparse
 import time
 import tempfile
+import shutil
+import subprocess
+#from itertools import groupby
 from torchvision.utils import save_image
 import stat
 from icetk import icetk as tokenizer
@@ -422,7 +425,7 @@ def main(args):
     assert int(args.stage_1) + int(args.stage_2) + int(args.both_stages) == 1
     rank_id = args.device % args.parallel_size
     generate_frame_num = args.generate_frame_num
-    
+    out_n = 0
     if args.stage_1 or args.both_stages:
         model_stage1, args = InferenceModel_Sequential.from_pretrained(args, 'cogvideo-stage1')
         model_stage1.eval()
@@ -696,12 +699,53 @@ def main(args):
             for clip_i in range(len(imgs)):
                 # os.makedirs(output_dir_full_paths[clip_i], exist_ok=True)
                 my_save_multiple_images(imgs[clip_i], outputdir, subdir=f"frames/{clip_i}", debug=False)
-                os.system(f"gifmaker -i '{outputdir}'/frames/'{clip_i}'/0*.jpg -o '{outputdir}/{clip_i}.gif' -d 0.25")
+                #os.system(f"gifmaker -i '{outputdir}'/frames/'{clip_i}'/0*.jpg -o '{outputdir}/{clip_i}.gif' -d 0.25")
+                # make preview clips
+                start_number = 0
+                drawtxt = "drawtext=text='%{eif\:n+"+ str(start_number) +"\:d}':x=10:y=10:fontsize=50:box=1"
+                ret = subprocess.call([
+                    "ffmpeg",
+                    "-start_number",
+                    f"{start_number:05}",
+                    "-y",
+                    "-i", 
+                    f"'{outputdir}'/frames/'{clip_i}'/%05d.jpg",
+                    "-vf",
+                    drawtxt,
+                    "-c:a",
+                    "copy", 
+                    f"{outputdir}/{clip_i}.mp4"
+                ])
+
             torch.save(save_tokens, os.path.join(outputdir, 'frame_tokens.pt'))
         
         logging.info("CogVideo Stage1 completed. Taken time {:.2f}\n".format(time.time() - process_start_time))
         
         return save_tokens
+    # ======================================================================================================
+    def process_clip(clip_n,frame_n, out_n):
+        print(f'DEBUG: Processing init clip : {clip_n},init frame : {frame_n}')
+        frame_dir = f'output/frames/{frame_n}'
+        # copy the selected frame into init image dir
+        shutil.copy(f'{frame_dir}/{frame_n}.jpg'),'init/')
+        # render video
+        ret = subprocess.call([
+            "ffmpeg",
+            "-y",
+            "-i", 
+            f"{frame_dir}/%05d.jpg",
+            "frames:v",
+            f"{frame_n}",
+            "-c:a",
+            "copy", 
+            f"final/{out_n}.mp4"
+        ])
+        if ret == 0:
+            print(f"Made video #{out_n}")
+            return True
+        else:
+            print("Failed to make video")  
+            return False
                
     # ======================================================================================================
     def process_init(img):
@@ -752,13 +796,17 @@ def main(args):
                     return 
                 
             try:
-                print(f'DEBUG : init clip : {clip_n},init frame : {frame_n}')
+                if len(clip_n) > 0 and len(frame_n) > 0:
+                    if process_clip(clip_n,frame_n, out_n): #succesfully rendered imgs to video, increment video count
+                        out_n += 1
                 init_dir = '/home/ubuntu/myfs/CogVideo-lambda/init' #hard coded for now
                 init_img=None
                 if os.path.exists(init_dir) and os.listdir(init_dir) is not []:
                     img_file = os.listdir(init_dir)[0]
                     img_path = os.path.join(init_dir,img_file)
                     init_img = process_init(img_path) 
+                else:
+                    print("DEBUG: no init image found.")    
                 path = os.path.join(args.output_path, f"{now_qi}_{raw_text}")
                 parent_given_tokens = process_stage1(model_stage1, raw_text, duration=4.0, video_raw_text=raw_text, video_guidance_text="视频",
                                                      image_text_suffix=" 高清摄影",
