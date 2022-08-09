@@ -769,6 +769,7 @@ def main(args):
             promptlist = None 
             
         now_qi = -1
+        curr_outdir = ""
         while True:
             now_qi += 1
             
@@ -796,8 +797,8 @@ def main(args):
                 frame_n = input("\nFrame number : ").strip()
                 
             try:
-                if len(clip_n) > 0 and len(frame_n) > 0:
-                    if process_clip(outputdir,clip_n,frame_n, out_n): #succesfully rendered imgs to video, increment video count
+                if len(curr_outdir) > 0 and len(clip_n) > 0 and len(frame_n) > 0:
+                    if process_clip(curr_outdir,clip_n,frame_n, out_n): #succesfully rendered imgs to video, increment video count
                         out_n += 1
                 init_dir = '/home/ubuntu/myfs/CogVideo-lambda/init' #hard coded for now
                 init_img=None
@@ -808,6 +809,7 @@ def main(args):
                 else:
                     print("DEBUG: no init image found.")    
                 path = os.path.join(args.output_path, f"{now_qi}_{raw_text}")
+                curr_outdir = path
                 parent_given_tokens = process_stage1(model_stage1, raw_text, duration=4.0, video_raw_text=raw_text, video_guidance_text="视频",
                                                      image_text_suffix=" 高清摄影",
                                                      outputdir=path if args.stage_1 else None, 
