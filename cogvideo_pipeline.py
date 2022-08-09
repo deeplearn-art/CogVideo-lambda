@@ -590,7 +590,7 @@ def main(args):
                 f"{start_number:04}",
                 "-y",
                 "-i", 
-                f"'{outputdir}'/frames/'{sample_i}'/%04d.jpg",
+                f"{outputdir}/frames/{sample_i}/%04d.jpg",
                 "-vf",
                 drawtxt,
                 "-c:a",
