@@ -586,6 +586,8 @@ def main(args):
             drawtxt = "drawtext=text='%{eif\:n+"+ str(start_number) +"\:d}':x=10:y=10:fontsize=50:box=1"
             ret = subprocess.call([
                 "ffmpeg",
+                "-framerate",
+                "8",
                 "-start_number",
                 f"{start_number:04}",
                 "-y",
@@ -730,6 +732,8 @@ def main(args):
         # render video
         ret = subprocess.call([
             "ffmpeg",
+            "-framerate",
+            "8",
             "-y",
             "-i", 
             f"{frame_dir}/%04d.jpg",
