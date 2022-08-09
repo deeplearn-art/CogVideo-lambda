@@ -726,7 +726,7 @@ def main(args):
         print(f'DEBUG: Processing init clip : {clip_n},init frame : {frame_n}')
         frame_dir = f'{outputdir}/frames/{clip_n}'
         # copy the selected frame into init image dir
-        shutil.copy(f'{frame_dir}/{frame_n}.jpg','init/')
+        shutil.copy(f'{frame_dir}/{frame_n:04}.jpg','init/')
         # render video
         ret = subprocess.call([
             "ffmpeg",
