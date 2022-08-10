@@ -733,7 +733,7 @@ def main(args):
         ret = subprocess.call([
             "ffmpeg",
             "-framerate",
-            "8",
+            8,
             "-y",
             "-i", 
             f"{frame_dir}/%04d.jpg",
