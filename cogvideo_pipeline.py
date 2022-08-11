@@ -774,6 +774,8 @@ def main(args):
             
         now_qi = -1
         curr_outdir = ""
+        clip_n = ""
+        frame_n = ""
         while True:
             now_qi += 1
             
