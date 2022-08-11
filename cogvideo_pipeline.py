@@ -733,12 +733,12 @@ def main(args):
         ret = subprocess.call([
             "ffmpeg",
             "-framerate",
-            8,
+            "8",
             "-y",
             "-i", 
             f"{frame_dir}/%04d.jpg",
-            "frames:v",
-            f"{frame_n}",
+            "-frames:v",
+            frame_n,
             "-c:a",
             "copy", 
             f"final/{out_n}.mp4"
@@ -806,7 +806,7 @@ def main(args):
                         out_n += 1
                 init_dir = '/home/ubuntu/myfs/CogVideo-lambda/init' #hard coded for now
                 init_img=None
-                if os.path.exists(init_dir) and os.listdir(init_dir) is not []:
+                if os.path.exists(init_dir) and os.listdir(init_dir) != []:
                     img_file = os.listdir(init_dir)[0]
                     img_path = os.path.join(init_dir,img_file)
                     init_img = process_init(img_path) 
